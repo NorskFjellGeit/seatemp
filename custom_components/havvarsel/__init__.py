@@ -1,0 +1,1 @@
+"""Sjøtemperatur fra Havvarsel.no"""
