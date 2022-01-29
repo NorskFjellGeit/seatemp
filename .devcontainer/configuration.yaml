@@ -1,9 +1,11 @@
 default_config:
 
+sensor:
+  platform: havvarsel
+
 logger:
   default: info
   logs:
-    custom_components.nordpool: debug
-
+    custom_components.havvarsel: debug
 # If you need to debug uncommment the line below (doc: https://www.home-assistant.io/integrations/debugpy/)
 # debugpy:
