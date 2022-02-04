@@ -2,6 +2,7 @@
   "domain": "havvarsel",
   "name": "Havvarsel.no",
   "config_flow": true,
+  "version": "0.0.1",
   "documentation": "https://www.home-assistant.io/integrations/havvarsel",
   "requirements": [
     "requests==2.27.1"
