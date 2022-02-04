@@ -1,3 +1,25 @@
 {
-    "title": "Havtemperatur"
+    "config": {
+        "abort": {
+            "no_home": "Ingen hjemmekoordinater er angitt i Home Assistant-konfigurasjonen"
+        },
+        "error": {
+            "already_configured": "Tjenesten er allerede konfigurert"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "Breddegrad",
+                    "longitude": "Lengdegrad",
+                    "name": "Navn"
+                },
+                "description": "",
+                "title": "Plassering"
+            }
+        }
+    },
+    "state": {
+        "temperature": "Temperatur",
+        "salinity": "Saltinnhold"
+    }
 }

@@ -1,10 +1,17 @@
 {
-    "domain": "havvarsel",
-    "name": "Havvarsel.no Sensor",
-    "documentation": "https://github.com/NorskFjellGeit/seatemp",
-    "dependencies": [],
-    "codeowners": [],
-    "requirements": ["requests"],
-    "iot_class": "local_polling",
-    "version": "0.0.1"
-  }
+  "domain": "havvarsel",
+  "name": "Havvarsel.no",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/havvarsel",
+  "requirements": [
+    "requests==2.27.1"
+  ],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@NorskFjellGeit"
+  ],
+  "iot_class": "cloud_polling"
+}

@@ -1,27 +1,12 @@
-from datetime import timedelta
+"""Constants for the Havvarsel.no integration."""
 
-# Base component constants
-NAME = "Havvarsel"
 DOMAIN = "havvarsel"
-DOMAIN_DATA = f"{DOMAIN}_data"
-VERSION = "0.0.1"
-ATTRIBUTION = "Data provided by https://havvarsel.no"
-ISSUE_URL = "https://github.com/NorskFjellGeit/seatemp/issues"
 
-PER_MILLE_UNIT = "‰"
+HOME_LOCATION_NAME = "Home"
+CONF_TRACK_HOME = "track_home"
 
-# Icons
-ICON = "mdi:pool"
+# Oslo
+DEFAULT_HOME_LATITUDE = 59.8939529
+DEFAULT_HOME_LONGITUDE = 10.6450359
 
-# Device classes
-
-# Platforms
-SENSOR = "sensor"
-PLATFORMS = [SENSOR]
-
-# Defaults
-DEFAULT_NAME = DOMAIN
-
-# Other
-
-SCAN_INTERVAL = timedelta(hours=2)
+API_URL = "https://api.havvarsel.no/apps/havvarsel/v1/get_projection"

@@ -1,79 +1,73 @@
-from urllib.parse import urlencode
-from requests import get
-from datetime import datetime, timezone
+import asyncio
+import datetime
+import logging
 
 
-class HavvarselDataResult(object):
-    temp: float
-    salt: int
-    time: datetime
+import aiohttp
+import async_timeout
+import pytz
 
-    def __init__(
-        self, temp: float = 0.0, salt: int = 0, time: datetime = datetime.utcnow()
-    ) -> None:
-        self.temp = temp
-        self.salt = salt
-        self.time = time
+TIMEOUT = 30
 
-    def __repr__(self) -> str:
-        return repr(self.__dict__)
+_LOGGER = logging.getLogger(__name__)
+
+DEFAULT_API_URL = "https://api.havvarsel.no/apps/havvarsel/v1/get_projection"
 
 
 class HavvarselData:
+    """Representation of Havvarsel data."""
 
-    HAVVARSEL_URL = "https://api.havvarsel.no/apps/havvarsel/v1/get_projection"
-
-    after: datetime = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%fZ")
-    before: datetime = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%fZ")
-    lat: float = 60.39323
-    lon: float = 5.3245
-
-    def __init__(
-        self,
-        after=None,
-        before=None,
-        lat=None,
-        lon=None,
-        variable=None,
-    ) -> None:
-        if after:
-            self.after = after
-        if before:
-            self.before = before
-        if lat:
-            self.lat = lat
-        if lon:
-            self.lon = lon
-
-    def _params(self) -> dict:
-        return {
-            "after": self.after,
-            "before": self.before,
-            "lat": self.lat,
-            "lon": self.lon,
+    def __init__(self, urlparams, websession=None, api_url=DEFAULT_API_URL):
+        """Initialize the Havvarsel object."""
+        urlparams = {
+            "lat": str(round(float(urlparams["lat"]), 4)),
+            "lon": str(round(float(urlparams["lon"]), 4)),
             "variable": "temperature,salinity",
         }
+        self._urlparams = urlparams
+        self._api_url = api_url
+        if websession is None:
 
-    def get_data(self):
-        headers = {
-            "User-Agent": "Home Assistant Integration",
-        }
+            async def _create_session():
+                return aiohttp.ClientSession()
+
+            loop = asyncio.get_event_loop()
+            self._websession = loop.run_until_complete(_create_session())
+        else:
+            self._websession = websession
+        self.data = None
+
+    async def fetching_data(self, *_):
+        """Get the latest data from met.no."""
         try:
-            req = get(self.HAVVARSEL_URL, params=self._params(), headers=headers)
-            req.raise_for_status()
-            jsondata = req.json()
-            return HavvarselDataResult(
-                temp=round(jsondata["variables"][0]["datapoints"][0]["value"], 1),
-                salt=round(jsondata["variables"][1]["datapoints"][0]["value"]),
-                time=datetime.fromtimestamp(
-                    int(jsondata["variables"][0]["datapoints"][0]["raw_time"]) / 1000,
-                    tz=timezone.utc,
-                ),
+            async with async_timeout.timeout(TIMEOUT):
+                resp = await self._websession.get(self._api_url, params=self._urlparams)
+            if resp.status >= 400:
+                _LOGGER.error("%s returned %s", self._api_url, resp.status)
+                return False
+            self.data = await resp.json()
+        except (asyncio.TimeoutError, aiohttp.ClientError) as err:
+            _LOGGER.error(
+                "Access to %s returned error '%s'", self._api_url, type(err).__name__
             )
-        except Exception as e:
-            return HavvarselDataResult()
+            return False
+        except ValueError:
+            _LOGGER.exception("Unable to parse json response from %s", self._api_url)
+            return False
+        return True
 
+    def get_current_seadata(self):
+        """Get the current havvarsel data."""
+        if self.data is None:
+            return {}
 
-if __name__ == "__main__":
-    hv = HavvarselData()
-    print(hv.get_data())
+        return {
+            "temperature": round(
+                self.data["variables"][0]["datapoints"][0]["value"], 1
+            ),
+            "salinity": round(self.data["variables"][1]["datapoints"][0]["value"]),
+            "time": datetime.datetime.fromtimestamp(
+                int(self.data["variables"][0]["datapoints"][0]["raw_time"]) / 1000,
+                tz=datetime.timezone.utc,
+            ),
+        }
